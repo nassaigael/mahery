@@ -4,21 +4,16 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Dict, Union
 
-app = FastAPI()
-
-
+# Initialisation de l'application FastAPI
 app = FastAPI()
 
 # --- Stockage en mémoire vive pour les posts (Q4, Q5, Q6) ---
-# Utilisation d'une liste simple pour simuler le stockage en mémoire.
-# En production, cela serait remplacé par une base de données.
 class Post(BaseModel):
     author: str
     title: str
     content: str
     creation_datetime: datetime
 
-# Variable globale pour stocker les posts en mémoire
 posts_db: List[Post] = []
 
 # --- Q1 : Route GET /ping ---
@@ -51,8 +46,6 @@ async def home():
     return Response(content=html_content, media_type="text/html")
 
 # --- Q3 : Configuration pour les routes inconnues (404 Not Found) ---
-# FastAPI gère cela via un gestionnaire d'exception ou un catch-all.
-# Nous allons utiliser la gestion des exceptions pour les 404.
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc: HTTPException):
     """
@@ -80,7 +73,7 @@ async def create_posts(posts: List[Post]):
     Prend une liste d'objets JSON 'post', les mémorise en mémoire vive
     et retourne la liste complète des posts.
     """
-    posts_db.extend(posts)  # Ajoute les nouveaux posts à la liste existante
+    posts_db.extend(posts)
     return posts_db
 
 # --- Q5 : Route GET /posts ---
@@ -104,32 +97,14 @@ async def upsert_post(post: Post):
     found = False
     for i, existing_post in enumerate(posts_db):
         if existing_post.title == post.title:
-            # Si le titre existe, mettre à jour le post
-            # On pourrait ajouter une logique pour vérifier si les valeurs ont réellement changé
-            # et retourner 204 No Content si aucune modification n'est nécessaire.
             posts_db[i] = post
             found = True
             break
     
     if not found:
-        # Si le titre n'existe pas, ajouter le nouveau post
         posts_db.append(post)
-        # Bien que l'énoncé demande 200 OK pour PUT, un 201 Created serait sémantiquement plus précis ici
-        # si une création a lieu. Pour se conformer à la consigne de retourner 200 OK, nous le gardons.
-        # Toutefois, en API REST strict, PUT devrait retourner 201 si la ressource est créée.
-        # Vous pouvez changer 'status.HTTP_200_OK' à 'status.HTTP_201_CREATED' pour ce cas spécifique si désiré.
-        pass # Le status_code par défaut de la route est 200 OK, ou 201 si on le set dans le code.
-
+    
     return posts_db
-
-# Exemple de démarrage de l'application (pour le développement)
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-
-
 
 # --- NOUVEAU : Q7 : Route GET /ping/auth avec Basic Authentication ---
 
